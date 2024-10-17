@@ -3,21 +3,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import CustomFormField from "../ui/CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { useState } from "react";
 import { getAppointmentSchema } from "@/lib/validation";
 import { useRouter } from "next/navigation";
-import { createUser } from "@/lib/actions/patient.actions";
 import { FormFieldType } from "./PatientForm";
 import { Doctors } from "@/constants";
 import { SelectItem } from "../ui/select";
 import Image from "next/image";
 import { createAppointment, updateAppointment } from "@/lib/actions/appointment.actions";
 import { Appointment } from "@/types/appwrite.types";
-import { BookType } from "lucide-react";
+
 
 
 
@@ -39,16 +37,14 @@ const AppointmentForm = ({
   const form = useForm<z.infer<typeof AppointmentFormValidation>>({
     resolver: zodResolver(AppointmentFormValidation),
     defaultValues: {
-      primaryPhysician: appointment ? appointment?.primaryPhysician : "",
-      schedule: appointment
-        ? new Date(appointment?.schedule!)
-        : new Date(Date.now()),
-      reason: appointment ? appointment.reason : "",
-      note: appointment ? appointment.note : "",
+      primaryPhysician: appointment?.primaryPhysician || "",
+      schedule: appointment ? new Date(appointment.schedule) : new Date(),
+      reason: appointment?.reason || "",
+      note: appointment?.note || "",
       cancellationReason: appointment?.cancellationReason || "",
-
     },
   });
+  
 
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof AppointmentFormValidation>) {

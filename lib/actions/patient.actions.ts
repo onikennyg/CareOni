@@ -1,58 +1,73 @@
 'use server'
 
 import { ID, Query } from "node-appwrite"
-import { BUCKET_ID, DATABASE_ID, databases, ENDPOINT, PATIENT_COLLECTION_ID, PROJECT_ID, storage, users } from "../appwrite.config"
+import {
+    BUCKET_ID,
+    DATABASE_ID,
+    databases,
+    ENDPOINT,
+    PATIENT_COLLECTION_ID,
+    PROJECT_ID,
+    storage,
+    users
+} from "../appwrite.config"
 import { parseStringify } from "../utils";
 import { InputFile } from "node-appwrite/file"
+
+// Define a specific error type based on the expected structure
+interface AppwriteError {
+    code: number;
+    message: string;
+    // Add other relevant properties as needed
+}
 
 export const createUser = async (user: CreateUserParams) => {
     try {
         const newUser = await users.create(
-            ID.unique(), 
-            user.email, 
-            user.phone, 
-            undefined, 
+            ID.unique(),
+            user.email,
+            user.phone,
+            undefined,
             user.name
-        )
-        console.log({newUser});
+        );
+        console.log({ newUser });
 
-        return parseStringify(newUser)
-        
-    } catch (error: any) {
+        return parseStringify(newUser);
+
+    } catch (error: unknown) {
+        const appwriteError = error as AppwriteError; // Type assertion
         // check existing user
-        if(error && error?.code === 409) {
+        if (appwriteError && appwriteError.code === 409) {
             const existingUser = await users.list([
                 Query.equal('email', [user.email])
-            ])
+            ]);
 
-            return existingUser?.users[0]
+            return existingUser?.users[0];
         }
     }
 };
 
 export const getUser = async (userId: string) => {
     try {
-       const user = await users.get(userId);
+        const user = await users.get(userId);
 
-       return parseStringify(user)
-    } catch (error) {
+        return parseStringify(user);
+    } catch (error: unknown) {
         console.log(error);
-        
     }
 }
 
 export const getPatient = async (userId: string) => {
     try {
-       const patients = await databases.listDocuments(
-        DATABASE_ID!,
-        PATIENT_COLLECTION_ID!,
-        [Query.equal('userId', userId)]
-       );
+        const patients = await databases.listDocuments(
+            DATABASE_ID!,
+            PATIENT_COLLECTION_ID!,
+            [Query.equal('userId', userId)]
+        );
 
-       return parseStringify(patients.documents[0])
-    } catch (error) {
+        return parseStringify(patients.documents[0]);
+    } catch (error: unknown) {
         console.log(error);
-        
     }
 }
 
@@ -60,16 +75,14 @@ export const registerPatient = async ({ identificationDocument, ...patient }: Re
     try {
         let file;
 
-        if(identificationDocument) {
+        if (identificationDocument) {
             const inputFile = InputFile.fromBuffer(
                 identificationDocument?.get('blobFile') as Blob,
                 identificationDocument?.get('fileName') as string,
-            )
+            );
 
-            file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+            file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile);
         };
-
-        
 
         const newPatient = await databases.createDocument(
             DATABASE_ID!,
@@ -80,11 +93,10 @@ export const registerPatient = async ({ identificationDocument, ...patient }: Re
                 identificationDocumentUrl: `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file?.$id}/view?project=${PROJECT_ID}`,
                 ...patient
             }
-        )
+        );
 
         return parseStringify(newPatient);
-    } catch (error) {
+    } catch (error: unknown) {
         console.log(error);
-        
     }
 }

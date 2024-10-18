@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
   FormControl,
   FormField,
@@ -9,7 +9,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Control } from "react-hook-form";
+import { Control, ControllerRenderProps, FieldValues, Path } from "react-hook-form";
 import { FormFieldType } from "../forms/PatientForm";
 import Image from "next/image";
 import "react-phone-number-input/style.css";
@@ -21,9 +21,9 @@ import { Select, SelectContent, SelectTrigger, SelectValue } from "./select";
 import { Textarea } from "./textarea";
 import { Checkbox } from "./checkbox";
 
-interface CustomProps {
-  control: Control<any>;
-  name: string;
+interface CustomProps<T extends FieldValues> {
+  control: Control<T>;
+  name: Path<T>;  // Ensure name matches the form field's type
   label?: string;
   placeholder?: string;
   iconSrc?: string;
@@ -32,11 +32,17 @@ interface CustomProps {
   dateFormat?: string;
   showTimeSelect?: boolean;
   children?: React.ReactNode;
-  renderSkeleton?: (field: any) => React.ReactNode;
+  renderSkeleton?: (field: ControllerRenderProps<T>) => React.ReactNode;
   fieldType: FormFieldType;
 }
 
-const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
+const RenderField = <T extends FieldValues>({
+  field,
+  props,
+}: {
+  field: ControllerRenderProps<T>;
+  props: CustomProps<T>;
+}) => {
   const {
     fieldType,
     iconSrc,
@@ -89,7 +95,7 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
             international
             withCountryCallingCode
             value={field.value as E164Number | undefined}
-            onChange={field.onChange}
+            onChange={(value) => field.onChange(value)}
             className="input-phone"
           />
         </FormControl>
@@ -101,7 +107,7 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
             src="/assets/icons/calendar.svg"
             height={24}
             width={24}
-            alt="calender"
+            alt="calendar"
             className="ml-2"
           />
           <FormControl>
@@ -140,7 +146,7 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
             <Checkbox
               id={props.name}
               checked={field.value}
-              onCheckedChange={field.onChange}
+              onCheckedChange={(checked) => field.onChange(checked)}
             />
             <label htmlFor={props.name} className="checkbox-label">
               {props.label}
@@ -149,11 +155,11 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
         </FormControl>
       );
     default:
-      break;
+      return null;
   }
 };
 
-const CustomFormField = (props: CustomProps) => {
+const CustomFormField = <T extends FieldValues>(props: CustomProps<T>) => {
   const { control, name, label } = props;
 
   return (
@@ -166,7 +172,6 @@ const CustomFormField = (props: CustomProps) => {
             <FormLabel className="shad-input-label">{label}</FormLabel>
           )}
           <RenderField field={field} props={props} />
-
           <FormMessage className="shad-error" />
         </FormItem>
       )}

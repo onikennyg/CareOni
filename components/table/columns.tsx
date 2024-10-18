@@ -8,7 +8,6 @@ import { Appointment } from "@/types/appwrite.types";
 import { StatusBadge } from "../ui/StatusBadge";
 import { AppointmentModal } from "../ui/AppointmentModal";
 
-
 export const columns: ColumnDef<Appointment>[] = [
   {
     header: "#",
@@ -55,19 +54,25 @@ export const columns: ColumnDef<Appointment>[] = [
       const appointment = row.original;
 
       const doctor = Doctors.find(
-        (doctor) => doctor.name === appointment.primaryPhysician
+        (doc) => doc.name === appointment.primaryPhysician
       );
 
       return (
         <div className="flex items-center gap-3">
-          <Image
-            src={doctor?.image!}
-            alt="doctor"
-            width={100}
-            height={100}
-            className="size-8"
-          />
-          <p className="whitespace-nowrap">Dr. {doctor?.name}</p>
+          {doctor?.image ? (
+            <Image
+              src={doctor.image}
+              alt="doctor"
+              width={100}
+              height={100}
+              className="size-8"
+            />
+          ) : (
+            <div className="size-8 bg-gray-200 rounded-full" />
+          )}
+          <p className="whitespace-nowrap">
+            Dr. {doctor ? doctor.name : "Unknown"}
+          </p>
         </div>
       );
     },

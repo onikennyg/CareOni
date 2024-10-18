@@ -3,10 +3,14 @@ import { getUser } from "@/lib/actions/patient.actions";
 import Image from "next/image";
 import React from "react";
 
-
 const Register = async ({ params: { userId } }: SearchParamProps) => {
   const user = await getUser(userId);
 
+  // Check if user is defined, handle the case when it is not
+  if (!user) {
+    // Handle the case when user is undefined
+    return <div>User not found.</div>; // or redirect, show a loading state, etc.
+  }
 
   return (
     <div className="flex h-screen max-h-screen">

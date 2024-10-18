@@ -1,8 +1,8 @@
 'use server'
 
 import { ID, Query } from "node-appwrite";
-import { APPOINTMENT_COLLECTION_ID, DATABASE_ID, databases, messaging } from "../appwrite.config";
-import { parseStringify, formatDateTime } from "../utils";
+import { APPOINTMENT_COLLECTION_ID, DATABASE_ID, databases } from "../appwrite.config";
+import { parseStringify } from "../utils";
 import { Appointment } from "@/types/appwrite.types";
 import { revalidatePath } from "next/cache";
 
@@ -33,7 +33,7 @@ export const getAppointment = async (appointmentId: string) => {
 
         return parseStringify(appointment);
     } catch (error) {
-        
+      console.log(error);
     }
 }
 
@@ -45,44 +45,54 @@ export const getRecentAppointmentList = async () => {
       [Query.orderDesc("$createdAt")]
     );
 
-      const initialCounts = {
-        scheduledCount: 0,
-        pendingCount: 0,
-        cancelledCount: 0,
-      };
-  
-      const counts = (appointments.documents as Appointment[]).reduce(
-        (acc, appointment) => {
-          switch (appointment.status) {
-            case "scheduled":
-              acc.scheduledCount++;
-              break;
-            case "pending":
-              acc.pendingCount++;
-              break;
-            case "cancelled":
-              acc.cancelledCount++;
-              break;
-          }
-          return acc;
-        },
-        initialCounts
-      );
-  
-      const data = {
-        totalCount: appointments.total,
-        ...counts,
-        documents: appointments.documents,
-      };
-  
-      return parseStringify(data);
-    } catch (error) {
-      console.error(
-        "An error occurred while retrieving the recent appointments:",
-        error
-      );
-    }
-  };
+    const initialCounts = {
+      scheduledCount: 0,
+      pendingCount: 0,
+      cancelledCount: 0,
+    };
+
+    const counts = (appointments.documents as Appointment[]).reduce(
+      (acc, appointment) => {
+        switch (appointment.status) {
+          case "scheduled":
+            acc.scheduledCount++;
+            break;
+          case "pending":
+            acc.pendingCount++;
+            break;
+          case "cancelled":
+            acc.cancelledCount++;
+            break;
+        }
+        return acc;
+      },
+      initialCounts
+    );
+
+    const data = {
+      totalCount: appointments.total,
+      ...counts,
+      documents: appointments.documents,
+    };
+
+    return parseStringify(data);
+  } catch (error) {
+    console.error(
+      "An error occurred while retrieving the recent appointments:",
+      error
+    );
+
+    // Return default structure in case of an error
+    return {
+      totalCount: 0,
+      scheduledCount: 0,
+      pendingCount: 0,
+      cancelledCount: 0,
+      documents: [],
+    };
+  }
+};
+
 
 
 // //  SEND SMS NOTIFICATION
@@ -106,10 +116,8 @@ export const getRecentAppointmentList = async () => {
 //  UPDATE APPOINTMENT
 export const updateAppointment = async ({
     appointmentId,
-    userId,
     // timeZone,
     appointment,
-    type,
   }: UpdateAppointmentParams) => {
     try {
       // Update appointment to scheduled -> https://appwrite.io/docs/references/cloud/server-nodejs/databases#updateDocument

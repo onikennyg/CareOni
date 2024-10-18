@@ -22,9 +22,10 @@ import {
 } from "@/components/ui/table";
 import { decryptKey } from "@/lib/utils";
 
+// Updated DataTableProps to be generic for any data type
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
+  columns: ColumnDef<TData, TValue>[]; // Use generic ColumnDef
+  data: TData[]; // Generic data type
 }
 
 export function DataTable<TData, TValue>({
@@ -32,7 +33,6 @@ export function DataTable<TData, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
   const encryptedKey =
-
     typeof window !== "undefined"
       ? window.localStorage.getItem("accessKey")
       : null;
@@ -58,18 +58,13 @@ export function DataTable<TData, TValue>({
         <TableHeader className=" bg-dark-200">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="shad-table-row-header">
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                );
-              })}
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
             </TableRow>
           ))}
         </TableHeader>
